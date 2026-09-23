@@ -1,0 +1,244 @@
+<mu>
+import { muState } from '@mulanjs/mulanjs';
+
+state = muState({
+    report: null
+});
+
+setReport(data) ->
+    state.report = data;
+</mu>
+<mu-template>
+  <div class="scorecard-container" mu-if="state.report">
+    <!-- Verdict Banner -->
+    <div class="verdict-banner" class="${'verdict-banner ' + (state.report.scorecard.verdict === 'APPROVE' ? 'verdict-approve' : (state.report.scorecard.verdict === 'REQUEST_CHANGES' ? 'verdict-reject' : 'verdict-comment'))}">
+      <div class="verdict-icon">
+        <span mu-if="state.report.scorecard.verdict === 'APPROVE'">✅</span>
+        <span mu-if="state.report.scorecard.verdict === 'REQUEST_CHANGES'">⚠️</span>
+        <span mu-if="state.report.scorecard.verdict === 'COMMENT'">💬</span>
+      </div>
+      <div class="verdict-details">
+        <div class="verdict-title">
+          <span mu-if="state.report.scorecard.verdict === 'APPROVE'">Ready to Merge</span>
+          <span mu-if="state.report.scorecard.verdict === 'REQUEST_CHANGES'">Changes Requested</span>
+          <span mu-if="state.report.scorecard.verdict === 'COMMENT'">Review Comments Provided</span>
+        </div>
+        <div class="verdict-desc">${state.report.overallSummary}</div>
+      </div>
+      <div class="verdict-meta">
+        <span class="badge-provider">AI: ${state.report.providerUsed} (${state.report.modelUsed})</span>
+        <span class="badge-time">Scan: ${state.report.executionTimeMs}ms</span>
+      </div>
+    </div>
+
+    <!-- Metric Cards Grid -->
+    <div class="scorecard-metrics">
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-title">Quality Score</span>
+          <span class="metric-icon">⭐</span>
+        </div>
+        <div class="metric-value" class="${'metric-value ' + (state.report.scorecard.qualityScore >= 80 ? 'text-green' : (state.report.scorecard.qualityScore >= 60 ? 'text-amber' : 'text-red'))}">
+          ${state.report.scorecard.qualityScore}<span class="metric-max">/100</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="${'progress-bar-fill ' + (state.report.scorecard.qualityScore >= 80 ? 'fill-green' : (state.report.scorecard.qualityScore >= 60 ? 'fill-amber' : 'fill-red'))}" style="width: ${state.report.scorecard.qualityScore}%"></div>
+        </div>
+        <div class="metric-subtext">Maintainability & Clean Architecture</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-title">Security Health</span>
+          <span class="metric-icon">🛡️</span>
+        </div>
+        <div class="metric-value" class="${'metric-value ' + (state.report.scorecard.securityScore >= 80 ? 'text-green' : (state.report.scorecard.securityScore >= 60 ? 'text-amber' : 'text-red'))}">
+          ${state.report.scorecard.securityScore}<span class="metric-max">/100</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="${'progress-bar-fill ' + (state.report.scorecard.securityScore >= 80 ? 'fill-green' : (state.report.scorecard.securityScore >= 60 ? 'fill-amber' : 'fill-red'))}" style="width: ${state.report.scorecard.securityScore}%"></div>
+        </div>
+        <div class="metric-subtext">Risk: <strong>${state.report.scorecard.riskLevel}</strong></div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-title">Test Readiness</span>
+          <span class="metric-icon">🧪</span>
+        </div>
+        <div class="metric-value" class="${'metric-value ' + (state.report.scorecard.testReadiness >= 80 ? 'text-green' : (state.report.scorecard.testReadiness >= 60 ? 'text-amber' : 'text-red'))}">
+          ${state.report.scorecard.testReadiness}<span class="metric-max">/100</span>
+        </div>
+        <div class="progress-bar-bg">
+          <div class="${'progress-bar-fill ' + (state.report.scorecard.testReadiness >= 80 ? 'fill-green' : (state.report.scorecard.testReadiness >= 60 ? 'fill-amber' : 'fill-red'))}" style="width: ${state.report.scorecard.testReadiness}%"></div>
+        </div>
+        <div class="metric-subtext">Regression & Assertion Coverage</div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-header">
+          <span class="metric-title">Total Findings</span>
+          <span class="metric-icon">🔍</span>
+        </div>
+        <div class="metric-value text-cyan">
+          ${state.report.issues.length}
+        </div>
+        <div class="issue-counts">
+          <span class="badge-count count-critical">Crit: ${state.report.issues.filter(i => i.severity === 'CRITICAL').length}</span>
+          <span class="badge-count count-high">High: ${state.report.issues.filter(i => i.severity === 'HIGH').length}</span>
+          <span class="badge-count count-med">Med: ${state.report.issues.filter(i => i.severity === 'MEDIUM').length}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Highlights Section -->
+    <div class="highlights-box" mu-if="state.report.positiveHighlights && state.report.positiveHighlights.length > 0">
+      <div class="highlights-title">🌟 Positive Highlights & Strengths</div>
+      <ul class="highlights-list">
+        <li class="highlight-item" mu-for="item in state.report.positiveHighlights">
+          ${item}
+        </li>
+      </ul>
+    </div>
+  </div>
+</mu-template>
+<style scoped>
+.scorecard-container {
+  margin-bottom: 24px;
+}
+.verdict-banner {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 18px 24px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(10px);
+}
+.verdict-approve {
+  background: rgba(5, 213, 80, 0.1);
+  border: 1px solid rgba(5, 213, 80, 0.35);
+  box-shadow: 0 0 24px rgba(5, 213, 80, 0.15);
+}
+.verdict-reject {
+  background: rgba(255, 51, 102, 0.12);
+  border: 1px solid rgba(255, 51, 102, 0.4);
+  box-shadow: 0 0 24px rgba(255, 51, 102, 0.15);
+}
+.verdict-comment {
+  background: rgba(255, 183, 3, 0.1);
+  border: 1px solid rgba(255, 183, 3, 0.35);
+  box-shadow: 0 0 24px rgba(255, 183, 3, 0.12);
+}
+.verdict-icon {
+  font-size: 2rem;
+}
+.verdict-details {
+  flex: 1;
+}
+.verdict-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  margin-bottom: 4px;
+}
+.verdict-desc {
+  color: #cbd5e1;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+.verdict-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+.badge-provider, .badge-time {
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+  white-space: nowrap;
+}
+.scorecard-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.metric-card {
+  background: #141724;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.metric-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.metric-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.metric-value {
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.metric-max {
+  font-size: 1rem;
+  color: #64748b;
+  font-weight: 500;
+}
+.text-green { color: #05d550; }
+.text-amber { color: #ffb703; }
+.text-red { color: #ff3366; }
+.text-cyan { color: #00f0ff; }
+.metric-subtext {
+  font-size: 0.78rem;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+.issue-counts {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+.badge-count {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.count-critical { background: #dc2626; color: #fff; }
+.count-high { background: #ea580c; color: #fff; }
+.count-med { background: #d97706; color: #fff; }
+.highlights-box {
+  background: rgba(0, 240, 255, 0.04);
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 10px;
+  padding: 16px 20px;
+}
+.highlights-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #00f0ff;
+  margin-bottom: 10px;
+}
+.highlights-list {
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.88rem;
+  color: #e2e8f0;
+}
+</style>

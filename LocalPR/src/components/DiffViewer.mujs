@@ -1,0 +1,258 @@
+<mu>
+import { muState } from '@mulanjs/mulanjs';
+
+state = muState({
+    files: [],
+    issues: [],
+    selectedFileIndex: 0,
+    filterSeverity: 'ALL'
+});
+
+setData(files, issues) ->
+    state.files = files || [];
+    state.issues = issues || [];
+    state.selectedFileIndex = 0;
+
+selectFile(index) ->
+    state.selectedFileIndex = index;
+
+setFilter(sev) ->
+    state.filterSeverity = sev;
+</mu>
+<mu-template>
+  <div class="diff-viewer-wrapper">
+    <!-- File Navigation Bar -->
+    <div class="diff-nav-bar">
+      <div class="diff-files-scroll">
+        <button 
+          mu-for="file in state.files"
+          class="${'file-tab-btn ' + (_index === state.selectedFileIndex ? 'active' : '')}"
+          mu-click="state.selectedFileIndex = _index"
+        >
+          <span class="file-status-icon">${file.status === 'added' ? '🟢' : (file.status === 'removed' ? '🔴' : '🟡')}</span>
+          <span class="file-tab-name">${file.filename}</span>
+          <span class="file-tab-diff">
+            <span class="tab-add">+${file.additions}</span>
+            <span class="tab-del">-${file.deletions}</span>
+          </span>
+          <span class="tab-issues-count" mu-if="state.issues.filter(i => i.file === file.filename).length > 0">
+            ⚠️ ${state.issues.filter(i => i.file === file.filename).length}
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Active File Content & Diffs -->
+    <div class="diff-content-panel" mu-if="state.files.length > 0 && state.files[state.selectedFileIndex]">
+      <div class="diff-file-header">
+        <div class="file-header-left">
+          <span class="file-path-title">${state.files[state.selectedFileIndex].filename}</span>
+          <span class="badge-status">${state.files[state.selectedFileIndex].status}</span>
+        </div>
+        <div class="file-header-right">
+          <span class="file-stat text-green">+${state.files[state.selectedFileIndex].additions} additions</span>
+          <span class="file-stat text-red">-${state.files[state.selectedFileIndex].deletions} deletions</span>
+          <span class="file-stat text-muted">${state.files[state.selectedFileIndex].changes} changes</span>
+        </div>
+      </div>
+
+      <!-- File Level Issues Banner -->
+      <div class="file-issues-tray" mu-if="state.issues.filter(i => i.file === state.files[state.selectedFileIndex].filename).length > 0">
+        <div class="tray-title">AI Review Findings for this File:</div>
+        <div 
+          class="issue-card" 
+          mu-for="issue in state.issues.filter(i => i.file === state.files[state.selectedFileIndex].filename)"
+        >
+          <div class="issue-header">
+            <span class="${'severity-badge severity-' + issue.severity.toLowerCase()}">${issue.severity}</span>
+            <span class="issue-title">${issue.title}</span>
+            <span class="issue-line" mu-if="issue.line">Line ${issue.line}</span>
+          </div>
+          <div class="issue-comment">${issue.comment}</div>
+          <div class="issue-suggestion" mu-if="issue.suggestion">
+            <div class="suggestion-label">💡 Recommended Remediation:</div>
+            <code class="suggestion-code">${issue.suggestion}</code>
+          </div>
+        </div>
+      </div>
+
+      <!-- Code Diff Viewer -->
+      <div class="diff-code-view">
+        <pre class="diff-pre"><code>${state.files[state.selectedFileIndex].patch || 'Binary or empty file change.'}</code></pre>
+      </div>
+    </div>
+
+    <div class="empty-diff" mu-if="state.files.length === 0">
+      <div class="empty-text">No pull request files loaded yet. Enter a GitHub repository and PR # above.</div>
+    </div>
+  </div>
+</mu-template>
+<style scoped>
+.diff-viewer-wrapper {
+  background: #0f111a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.diff-nav-bar {
+  background: #141724;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 8px 12px;
+  overflow-x: auto;
+}
+.diff-files-scroll {
+  display: flex;
+  gap: 8px;
+}
+.file-tab-btn {
+  background: #1a1e2e;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.file-tab-btn:hover {
+  background: #23283d;
+  color: #fff;
+}
+.file-tab-btn.active {
+  background: #272e48;
+  color: #fff;
+  border-color: rgba(0, 240, 255, 0.4);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.15);
+}
+.tab-add { color: #05d550; font-size: 0.75rem; font-weight: 700; margin-left: 4px; }
+.tab-del { color: #ff3366; font-size: 0.75rem; font-weight: 700; }
+.tab-issues-count {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.diff-content-panel {
+  padding: 20px;
+}
+.diff-file-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 16px;
+}
+.file-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.file-path-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+.badge-status {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #94a3b8;
+}
+.file-header-right {
+  display: flex;
+  gap: 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.file-issues-tray {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tray-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #f87171;
+}
+.issue-card {
+  background: #181c2c;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 14px 16px;
+}
+.issue-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+.issue-title {
+  font-weight: 700;
+  color: #fff;
+  font-size: 0.95rem;
+}
+.issue-line {
+  color: #64748b;
+  font-size: 0.8rem;
+  font-family: monospace;
+}
+.issue-comment {
+  font-size: 0.88rem;
+  color: #cbd5e1;
+  line-height: 1.45;
+  margin-bottom: 8px;
+}
+.issue-suggestion {
+  background: #0d0f17;
+  border: 1px solid rgba(0, 240, 255, 0.2);
+  border-radius: 6px;
+  padding: 10px 12px;
+}
+.suggestion-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #00f0ff;
+  margin-bottom: 4px;
+}
+.suggestion-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.84rem;
+  color: #a5f3fc;
+  display: block;
+  white-space: pre-wrap;
+}
+.diff-code-view {
+  background: #090b10;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+}
+.diff-pre {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.86rem;
+  line-height: 1.55;
+  color: #e2e8f0;
+  white-space: pre-wrap;
+}
+.empty-diff {
+  padding: 50px 20px;
+  text-align: center;
+  color: #64748b;
+}
+</style>

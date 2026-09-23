@@ -1,0 +1,183 @@
+<mu>
+import { muState } from '@mulanjs/mulanjs';
+
+state = muState({
+    coverage: null
+});
+
+setCoverage(c) ->
+    state.coverage = c;
+</mu>
+<mu-template>
+  <div class="coverage-panel" mu-if="state.coverage">
+    <div class="coverage-header">
+      <div class="coverage-title">
+        <span>📊 Code Coverage Analysis</span>
+        <span class="coverage-badge">${state.coverage.linesPercentage}% Total</span>
+      </div>
+      <div class="coverage-counts">
+        ${state.coverage.coveredLines} / ${state.coverage.totalLines} lines covered
+      </div>
+    </div>
+
+    <!-- 4 Metrics Row -->
+    <div class="cov-metrics-grid">
+      <div class="cov-metric-box">
+        <div class="cov-label">Lines</div>
+        <div class="cov-num text-green">${state.coverage.linesPercentage}%</div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill fill-green" style="width: ${state.coverage.linesPercentage}%"></div>
+        </div>
+      </div>
+
+      <div class="cov-metric-box">
+        <div class="cov-label">Branches</div>
+        <div class="cov-num text-amber">${state.coverage.branchPercentage}%</div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill fill-amber" style="width: ${state.coverage.branchPercentage}%"></div>
+        </div>
+      </div>
+
+      <div class="cov-metric-box">
+        <div class="cov-label">Functions</div>
+        <div class="cov-num text-cyan">${state.coverage.functionsPercentage}%</div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill fill-brand" style="width: ${state.coverage.functionsPercentage}%"></div>
+        </div>
+      </div>
+
+      <div class="cov-metric-box">
+        <div class="cov-label">Files Tested</div>
+        <div class="cov-num text-green">${state.coverage.files.length}</div>
+        <div class="cov-subtext">All modified files checked</div>
+      </div>
+    </div>
+
+    <!-- Per-file coverage table -->
+    <div class="cov-files-list">
+      <div class="cov-file-row" mu-for="f in state.coverage.files">
+        <div class="cov-file-info">
+          <span class="cov-file-name">${f.filename}</span>
+          <span class="cov-file-uncovered" mu-if="f.uncoveredLines && f.uncoveredLines.length > 0">
+            Uncovered lines: ${f.uncoveredLines.join(', ')}
+          </span>
+        </div>
+        <div class="cov-file-pct">
+          <span class="pct-text">${f.coverage}%</span>
+          <div class="progress-bar-bg mini-bar">
+            <div class="progress-bar-fill fill-green" style="width: ${f.coverage}%"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</mu-template>
+<style scoped>
+.coverage-panel {
+  background: #0f111a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 20px;
+  margin-top: 20px;
+}
+.coverage-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.coverage-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.coverage-badge {
+  font-size: 0.8rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(5, 213, 80, 0.2);
+  color: #05d550;
+  font-weight: 700;
+}
+.coverage-counts {
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+.cov-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.cov-metric-box {
+  background: #151826;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 14px;
+}
+.cov-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.cov-num {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+.cov-subtext {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+.cov-files-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.cov-file-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: #141724;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+.cov-file-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.cov-file-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+.cov-file-uncovered {
+  font-size: 0.75rem;
+  color: #f87171;
+}
+.cov-file-pct {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.pct-text {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #05d550;
+  width: 48px;
+  text-align: right;
+}
+.mini-bar {
+  width: 90px;
+  height: 6px;
+}
+</style>
