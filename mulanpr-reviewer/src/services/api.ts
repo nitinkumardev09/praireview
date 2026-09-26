@@ -9,11 +9,13 @@ export class ApiService {
 
     static async getHealth(): Promise<{ status: string; port: number; time: string }> {
         const res = await fetch(`${API_BASE}/api/health`);
+        if (!res.ok) throw new Error(`Server returned status ${res.status}`);
         return res.json();
     }
 
     static async getSettings(): Promise<any> {
         const res = await fetch(`${API_BASE}/api/settings`);
+        if (!res.ok) throw new Error(`Server returned status ${res.status}`);
         return res.json();
     }
 
@@ -23,6 +25,7 @@ export class ApiService {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(settings)
         });
+        if (!res.ok) throw new Error(`Server returned status ${res.status}`);
         return res.json();
     }
 
@@ -32,6 +35,7 @@ export class ApiService {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ target })
         });
+        if (!res.ok) throw new Error(`Server returned status ${res.status}`);
         return res.json();
     }
 
@@ -41,6 +45,7 @@ export class ApiService {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ owner, repo, prNumber })
         });
+        if (!res.ok) throw new Error(`Server returned status ${res.status}`);
         return res.json();
     }
 }
