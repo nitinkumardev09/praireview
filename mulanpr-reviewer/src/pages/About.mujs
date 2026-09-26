@@ -1,0 +1,77 @@
+<mu>
+import { muState } from '@mulanjs/mulanjs';
+
+const state = muState({});
+</mu>
+<mu-template>
+  <div class="page container">
+    <div style="text-align: center; padding: 40px 0">
+      <!-- Large Brand Logo -->
+      <svg width="80" height="80" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin: 0 auto 20px">
+        <circle cx="60" cy="60" r="40" fill="#FF4081" opacity="0.07"></circle>
+        <g>
+          <ellipse cx="60" cy="30" rx="15" ry="25" fill="#E91E63" opacity=".88"></ellipse>
+          <ellipse cx="60" cy="90" rx="15" ry="25" fill="#E91E63" opacity=".88"></ellipse>
+          <ellipse cx="30" cy="60" rx="25" ry="15" fill="#9C27B0" opacity=".88"></ellipse>
+          <ellipse cx="90" cy="60" rx="25" ry="15" fill="#9C27B0" opacity=".88"></ellipse>
+        </g>
+        <g transform="rotate(45 60 60)">
+          <ellipse cx="60" cy="30" rx="15" ry="25" fill="#2196F3" opacity=".88"></ellipse>
+          <ellipse cx="60" cy="90" rx="15" ry="25" fill="#2196F3" opacity=".88"></ellipse>
+          <ellipse cx="30" cy="60" rx="25" ry="15" fill="#3F51B5" opacity=".88"></ellipse>
+          <ellipse cx="90" cy="60" rx="25" ry="15" fill="#3F51B5" opacity=".88"></ellipse>
+        </g>
+        <circle cx="60" cy="60" r="15" fill="#FFC107"></circle>
+        <rect x="55" y="55" width="10" height="3" fill="#000" opacity=".55"></rect>
+        <rect x="55" y="60" width="5" height="3" fill="#000" opacity=".55"></rect>
+        <rect x="55" y="65" width="10" height="3" fill="#000" opacity=".55"></rect>
+      </svg>
+
+      <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 8px">MulanPR AI</h1>
+      <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 32px">Enterprise Pull Request Reviewer & Autonomous CI Quality Gate Station</p>
+    </div>
+
+    <!-- Features Grid -->
+    <div class="metrics-grid" style="margin-bottom: 32px">
+      <div class="card space-y-2" style="text-align: center">
+        <div style="font-size: 2rem">🦙</div>
+        <h3 style="font-size: 14px; font-weight: 700">100% Local Privacy</h3>
+        <p class="text-xs" style="color: var(--text-muted)">Run AI reviews entirely on your machine via Ollama. Zero data leaves your network.</p>
+      </div>
+      <div class="card space-y-2" style="text-align: center">
+        <div style="font-size: 2rem">🧪</div>
+        <h3 style="font-size: 14px; font-weight: 700">AST Code Coverage</h3>
+        <p class="text-xs" style="color: var(--text-muted)">File-by-file line & branch coverage on modified diff boundaries with quality gate enforcement.</p>
+      </div>
+      <div class="card space-y-2" style="text-align: center">
+        <div style="font-size: 2rem">🧠</div>
+        <h3 style="font-size: 14px; font-weight: 700">Memory Leak Detection</h3>
+        <p class="text-xs" style="color: var(--text-muted)">Heap & RSS profiling to catch unclosed DB handles, sockets, and lingering subscriptions.</p>
+      </div>
+      <div class="card space-y-2" style="text-align: center">
+        <div style="font-size: 2rem">📋</div>
+        <h3 style="font-size: 14px; font-weight: 700">Custom Standards</h3>
+        <p class="text-xs" style="color: var(--text-muted)">Inject organization-specific .md rulesets. AI cites exact rule violations by number.</p>
+      </div>
+    </div>
+
+    <!-- Tech Stack -->
+    <div class="card space-y-3">
+      <span class="section-title">🛠️ Technology Stack</span>
+      <div class="space-y-2" style="font-size: 12px; color: var(--text-secondary)">
+        <div class="flex items-center gap-3"><span class="badge badge-pass">Frontend</span> MulanJS Framework — .mujs Single-File Components</div>
+        <div class="flex items-center gap-3"><span class="badge badge-pass">UI Kit</span> MulanUI Components (Buttons, Chips, Dropdowns)</div>
+        <div class="flex items-center gap-3"><span class="badge badge-pass">Backend</span> Express.js — REST API with Multi-Model AI Engine</div>
+        <div class="flex items-center gap-3"><span class="badge badge-pass">AI Models</span> Ollama (Local), OpenAI GPT-4o, Anthropic Claude 3.5</div>
+        <div class="flex items-center gap-3"><span class="badge badge-pass">Integration</span> GitHub REST API — PR Diffs, Check Runs, Comments</div>
+        <div class="flex items-center gap-3"><span class="badge badge-pass">Design</span> Supabase Studio Dark & Light Themes — Vanilla CSS Design System</div>
+      </div>
+    </div>
+
+    <div style="text-align: center; padding: 24px 0; font-size: 11px; color: var(--text-dim)">
+      Built with ❤️ using MulanJS Framework — Open Source AI Code Review
+    </div>
+  </div>
+</mu-template>
+<style scoped>
+</style>

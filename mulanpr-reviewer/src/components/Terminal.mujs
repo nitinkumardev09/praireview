@@ -1,0 +1,84 @@
+<mu>
+import { muState } from '@mulanjs/mulanjs';
+
+const state = muState({
+    logs: 'Waiting for trigger... Click "Autonomous Clone & Run CI Coverage" or "Run AI Review" to start streaming logs.',
+    status: 'IDLE',
+    visible: false
+});
+
+function show() {
+    state.visible = true;
+}
+
+function hide() {
+    state.visible = false;
+}
+
+function toggle() {
+    state.visible = !state.visible;
+}
+
+function appendLog(line) {
+    state.logs += (state.logs ? '\n' : '') + line;
+}
+
+function setLogs(text) {
+    state.logs = text;
+}
+
+function setStatus(s) {
+    state.status = s;
+}
+
+function clearLogs() {
+    state.logs = '';
+}
+
+function copyLogs() {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        navigator.clipboard.writeText(state.logs);
+    }
+}
+
+function getStatusClass() {
+    if (state.status === 'RUNNING') return 'terminal-tag running';
+    if (state.status === 'COMPLETED') return 'terminal-tag completed';
+    return 'terminal-tag';
+}
+
+function getToggleLabel() {
+    return state.visible ? 'Minimize Live Console' : 'Open Terminal Window';
+}
+</mu>
+<mu-template>
+  <div>
+    <!-- Toggle Button (inline in toolchain bar) -->
+    <button class="terminal-mini-btn" mu-click="toggle()">
+      🖥️ <span>${getToggleLabel()}</span>
+    </button>
+
+    <!-- Terminal Drawer -->
+    <div class="terminal" mu-if="state.visible">
+      <div class="terminal-bar">
+        <div class="flex items-center gap-2">
+          <div class="terminal-dots">
+            <span class="terminal-dot dot-red"></span>
+            <span class="terminal-dot dot-yellow"></span>
+            <span class="terminal-dot dot-green"></span>
+          </div>
+          <span class="terminal-title">MulanPR Autonomous Runner Engine Daemon (:1018)</span>
+        </div>
+        <div class="terminal-controls">
+          <span class="${getStatusClass()}">${state.status}</span>
+          <button class="terminal-mini-btn" mu-click="copyLogs()">📋 Copy</button>
+          <button class="terminal-mini-btn" mu-click="clearLogs()">🧹 Clear</button>
+          <button class="terminal-mini-btn" mu-click="hide()">✕ Close</button>
+        </div>
+      </div>
+      <pre class="terminal-output">${state.logs}</pre>
+    </div>
+  </div>
+</mu-template>
+<style scoped>
+</style>

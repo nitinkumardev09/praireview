@@ -1,0 +1,132 @@
+<mu>
+import { muState } from '@mulanjs/mulanjs';
+
+function getInitialTheme() {
+    if (typeof window === 'undefined') return 'dark';
+    try {
+        const saved = localStorage.getItem('mulanpr_theme');
+        if (saved === 'light' || saved === 'dark') return saved;
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+            return 'light';
+        }
+    } catch (e) {}
+    return 'dark';
+}
+
+function applyTheme(theme) {
+    if (typeof document !== 'undefined') {
+        document.documentElement.setAttribute('data-theme', theme);
+        if (document.body) {
+            document.body.setAttribute('data-theme', theme);
+        }
+    }
+}
+
+const currentTheme = getInitialTheme();
+applyTheme(currentTheme);
+
+const headerState = muState({
+    currentRoute: (typeof window !== 'undefined' && window.location.hash) || '#/',
+    theme: currentTheme
+});
+
+if (typeof window !== 'undefined') {
+    window.addEventListener('hashchange', () => {
+        headerState.currentRoute = window.location.hash || '#/';
+    });
+
+    window.addEventListener('mulan-theme-change', (e) => {
+        if (e.detail && e.detail.theme) {
+            headerState.theme = e.detail.theme;
+            applyTheme(e.detail.theme);
+        }
+    });
+}
+
+function toggleTheme() {
+    const next = headerState.theme === 'dark' ? 'light' : 'dark';
+    headerState.theme = next;
+    applyTheme(next);
+    try {
+        localStorage.setItem('mulanpr_theme', next);
+    } catch (e) {}
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('mulan-theme-change', { detail: { theme: next } }));
+    }
+}
+
+function getThemeLabel() {
+    return headerState.theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+}
+
+function getThemeTitle() {
+    return headerState.theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme';
+}
+
+function getNavClass(path) {
+    const cur = headerState.currentRoute || '#/';
+    const isActive = path === '#/' ? (cur === '#/' || cur === '' || cur === '#') : cur.startsWith(path);
+    return 'nav-tab ' + (isActive ? 'active' : '');
+}
+</mu>
+<mu-template>
+  <header class="studio-header">
+    <div class="header-left">
+      <!-- Brand Floral SVG Logo -->
+      <a href="#/" class="logo-mark" aria-label="MulanPR Studio">
+        <svg class="brand-svg" width="34" height="34" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="60" cy="60" r="40" fill="#FF4081" opacity="0.07"></circle>
+          <g>
+            <ellipse cx="60" cy="30" rx="15" ry="25" fill="#E91E63" opacity=".88"></ellipse>
+            <ellipse cx="60" cy="90" rx="15" ry="25" fill="#E91E63" opacity=".88"></ellipse>
+            <ellipse cx="30" cy="60" rx="25" ry="15" fill="#9C27B0" opacity=".88"></ellipse>
+            <ellipse cx="90" cy="60" rx="25" ry="15" fill="#9C27B0" opacity=".88"></ellipse>
+          </g>
+          <g transform="rotate(45 60 60)">
+            <ellipse cx="60" cy="30" rx="15" ry="25" fill="#2196F3" opacity=".88"></ellipse>
+            <ellipse cx="60" cy="90" rx="15" ry="25" fill="#2196F3" opacity=".88"></ellipse>
+            <ellipse cx="30" cy="60" rx="25" ry="15" fill="#3F51B5" opacity=".88"></ellipse>
+            <ellipse cx="90" cy="60" rx="25" ry="15" fill="#3F51B5" opacity=".88"></ellipse>
+          </g>
+          <circle cx="60" cy="60" r="15" fill="#FFC107"></circle>
+          <rect x="55" y="55" width="10" height="3" fill="#000" opacity=".55"></rect>
+          <rect x="55" y="60" width="5" height="3" fill="#000" opacity=".55"></rect>
+          <rect x="55" y="65" width="10" height="3" fill="#000" opacity=".55"></rect>
+          <circle cx="45" cy="45" r="2.5" fill="#FF9800"></circle>
+          <circle cx="75" cy="45" r="2.5" fill="#FF9800"></circle>
+          <circle cx="45" cy="75" r="2.5" fill="#FF9800"></circle>
+          <circle cx="75" cy="75" r="2.5" fill="#FF9800"></circle>
+        </svg>
+      </a>
+
+      <!-- Breadcrumbs -->
+      <div class="breadcrumbs">
+        <span class="org">praireview</span>
+        <span class="sep">/</span>
+        <span class="project">ai-pr-engine</span>
+        <span class="env-badge">STUDIO</span>
+      </div>
+
+      <!-- Nav Tabs -->
+      <nav class="nav-tabs">
+        <a href="#/" class="${getNavClass('#/')}">⚡ Cockpit</a>
+        <a href="#/settings" class="${getNavClass('#/settings')}">⚙️ Settings</a>
+        <a href="#/about" class="${getNavClass('#/about')}">ℹ️ About</a>
+      </nav>
+    </div>
+
+    <div class="header-right">
+      <!-- Theme Switcher Toggle -->
+      <button class="theme-toggle" mu-click="toggleTheme()" title="${getThemeTitle()}" id="theme-toggle-btn">
+        ${getThemeLabel()}
+      </button>
+
+      <div class="daemon-pill">
+        <span class="daemon-dot"></span>
+        <span class="daemon-text">Daemon :1018</span>
+      </div>
+    </div>
+  </header>
+</mu-template>
+<style scoped>
+</style>

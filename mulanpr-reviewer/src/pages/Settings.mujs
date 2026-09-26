@@ -1,0 +1,183 @@
+<mu>
+import { muState } from '@mulanjs/mulanjs';
+import { ApiService } from '../services/api';
+
+function getInitialTheme() {
+    if (typeof window === 'undefined') return 'dark';
+    try {
+        const saved = localStorage.getItem('mulanpr_theme');
+        if (saved === 'light' || saved === 'dark') return saved;
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+            return 'light';
+        }
+    } catch (e) {}
+    return 'dark';
+}
+
+const state = muState({
+    githubToken: '',
+    activeProvider: 'ollama',
+    ollamaModel: 'qwen2.5-coder:latest',
+    openaiKey: '',
+    claudeKey: '',
+    savedNotice: false,
+    testStatus: null,
+    currentTheme: getInitialTheme()
+});
+
+if (typeof window !== 'undefined') {
+    window.addEventListener('mulan-theme-change', (e) => {
+        if (e.detail && e.detail.theme) {
+            state.currentTheme = e.detail.theme;
+        }
+    });
+}
+
+function setTheme(theme) {
+    state.currentTheme = theme;
+    if (typeof document !== 'undefined') {
+        document.documentElement.setAttribute('data-theme', theme);
+        if (document.body) {
+            document.body.setAttribute('data-theme', theme);
+        }
+    }
+    try {
+        localStorage.setItem('mulanpr_theme', theme);
+    } catch (e) {}
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('mulan-theme-change', { detail: { theme: theme } }));
+    }
+}
+
+// Load settings from server on mount
+ApiService.getSettings().then(function(data) {
+    if (data.githubToken) state.githubToken = data.githubToken;
+    if (data.activeProvider) state.activeProvider = data.activeProvider;
+    if (data.ollamaModel) state.ollamaModel = data.ollamaModel;
+    if (data.openaiKey) state.openaiKey = data.openaiKey;
+    if (data.claudeKey) state.claudeKey = data.claudeKey;
+}).catch(function() {});
+
+function saveSettings() {
+    ApiService.saveSettings({
+        githubToken: state.githubToken,
+        activeProvider: state.activeProvider,
+        ollamaModel: state.ollamaModel,
+        openaiKey: state.openaiKey,
+        claudeKey: state.claudeKey
+    }).then(function() {
+        state.savedNotice = true;
+        setTimeout(function() { state.savedNotice = false; }, 3000);
+    }).catch(function() {
+        state.savedNotice = true;
+        setTimeout(function() { state.savedNotice = false; }, 3000);
+    });
+}
+
+function testConnection(providerType) {
+    state.testStatus = { loading: true, provider: providerType, message: 'Testing connection...' };
+    ApiService.testConnection(providerType).then(function(res) {
+        state.testStatus = { loading: false, provider: providerType, success: res.success, message: res.message };
+    }).catch(function(err) {
+        state.testStatus = { loading: false, provider: providerType, success: false, message: err.message || 'Connection failed' };
+    });
+}
+
+function getTestStatusClass() {
+    if (!state.testStatus) return '';
+    if (state.testStatus.loading) return 'badge badge-warn';
+    return state.testStatus.success ? 'badge badge-pass' : 'badge badge-fail';
+}
+
+function getTestStatusText() {
+    if (!state.testStatus) return '';
+    return state.testStatus.message || '';
+}
+</mu>
+<mu-template>
+  <div class="page container">
+    <div style="margin-bottom: 20px">
+      <div class="badge badge-pass" style="margin-bottom: 8px">⚙️ AI Providers & Enterprise Standards</div>
+      <h1 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 4px">AI Engine Settings</h1>
+      <p class="text-xs" style="color: var(--text-muted)">Configure appearance themes, online and local AI models (Ollama, OpenAI, Claude), and enterprise review standards.</p>
+    </div>
+
+    <!-- Save notification -->
+    <div class="toast" mu-if="state.savedNotice" style="position: relative; bottom: auto; right: auto; margin-bottom: 16px">
+      ✅ Settings saved successfully!
+    </div>
+
+    <!-- Test status -->
+    <div mu-if="state.testStatus" style="margin-bottom: 16px">
+      <span class="${getTestStatusClass()}" style="padding: 6px 14px">${getTestStatusText()}</span>
+    </div>
+
+    <!-- Appearance & Themes -->
+    <div class="card space-y-3" style="margin-bottom: 16px">
+      <span class="section-title">🎨 UI Appearance & Themes</span>
+      <p class="text-xs" style="color: var(--text-muted)">Toggle between Supabase Studio Dark Theme and Clean Light Theme with high-contrast accessibility.</p>
+      <div class="flex flex-wrap gap-3">
+        <button class="btn ${state.currentTheme === 'dark' ? 'btn-primary' : 'btn-secondary'}" mu-click="setTheme('dark')">
+          🌙 Supabase Studio Dark
+        </button>
+        <button class="btn ${state.currentTheme === 'light' ? 'btn-primary' : 'btn-secondary'}" mu-click="setTheme('light')">
+          ☀️ Clean Studio Light
+        </button>
+      </div>
+    </div>
+
+    <!-- GitHub PAT -->
+    <div class="card space-y-3" style="margin-bottom: 16px">
+      <span class="section-title">🔑 GitHub Personal Access Token</span>
+      <p class="text-xs" style="color: var(--text-muted)">Required for fetching PR diffs and posting review comments. Stored securely on the local server.</p>
+      <div class="flex gap-2">
+        <input type="password" class="form-input" mu-model="state.githubToken" placeholder="ghp_xxxxxxxxxxxx" style="flex:1">
+        <button class="btn btn-secondary" mu-click="testConnection('github')">🧪 Test Token</button>
+      </div>
+    </div>
+
+    <!-- AI Provider Selection -->
+    <div class="card space-y-3" style="margin-bottom: 16px">
+      <span class="section-title">🧠 Active AI Provider (Runtime Switching)</span>
+      <p class="text-xs" style="color: var(--text-muted)">Switch between local Ollama inference and cloud BYOK APIs without server restart.</p>
+      <select class="form-select" mu-model="state.activeProvider">
+        <option value="ollama">🦙 Ollama Local — 100% Air-Gapped Privacy (qwen2.5-coder / deepseek-coder)</option>
+        <option value="openai">☁️ OpenAI API — GPT-4o / GPT-4o-mini (BYOK)</option>
+        <option value="claude">🧠 Anthropic Claude — Claude 3.5 Sonnet (BYOK)</option>
+      </select>
+    </div>
+
+    <!-- Ollama Config -->
+    <div class="card space-y-3" style="margin-bottom: 16px">
+      <span class="section-title">🦙 Ollama Local Model Configuration</span>
+      <div class="space-y-2">
+        <label class="form-label">Model Name</label>
+        <div class="flex gap-2">
+          <input type="text" class="form-input" mu-model="state.ollamaModel" style="flex:1">
+          <button class="btn btn-secondary" mu-click="testConnection('ollama')">🧪 Test Ollama</button>
+        </div>
+      </div>
+      <p class="text-xs" style="color: var(--text-dim)">Default endpoint: http://localhost:11434 — Run <code class="font-mono" style="color: var(--emerald)">ollama pull qwen2.5-coder:latest</code> to install the model.</p>
+    </div>
+
+    <!-- Cloud Keys -->
+    <div class="card space-y-3" style="margin-bottom: 16px">
+      <span class="section-title">☁️ Cloud API Keys (BYOK)</span>
+      <div class="space-y-2">
+        <label class="form-label">OpenAI API Key</label>
+        <input type="password" class="form-input" mu-model="state.openaiKey" placeholder="sk-xxxxxxxx">
+      </div>
+      <div class="space-y-2">
+        <label class="form-label">Anthropic Claude API Key</label>
+        <input type="password" class="form-input" mu-model="state.claudeKey" placeholder="sk-ant-xxxxxxxx">
+      </div>
+    </div>
+
+    <!-- Save -->
+    <div class="flex justify-end">
+      <button class="btn btn-primary" mu-click="saveSettings()">💾 Save All Settings</button>
+    </div>
+  </div>
+</mu-template>
+<style scoped>
+</style>

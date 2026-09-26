@@ -1,0 +1,77 @@
+<mu>
+import { muState } from '@mulanjs/mulanjs';
+
+const state = muState({
+    threshold: 80,
+    overallCoverage: 92.4,
+    files: [
+        { name: 'src/Services/OrderProcessingService.cs', totalLines: 156, covered: 147, linePercent: 94.2, branchPercent: 88.5, uncovered: '45, 114' },
+        { name: 'src/Data/OrderRepository.cs', totalLines: 124, covered: 110, linePercent: 88.5, branchPercent: 82.0, uncovered: '89, 94' },
+        { name: 'tests/Services/OrderProcessingServiceTests.cs', totalLines: 100, covered: 100, linePercent: 100.0, branchPercent: 95.0, uncovered: '-' }
+    ]
+});
+
+function setData(data) {
+    if (data.threshold) state.threshold = data.threshold;
+    if (data.overallCoverage) state.overallCoverage = data.overallCoverage;
+    if (data.files) state.files = data.files;
+}
+
+function getStatusBadge(linePercent) {
+    return linePercent >= state.threshold ? 'badge badge-pass' : 'badge badge-fail';
+}
+
+function getStatusText(linePercent) {
+    return linePercent >= state.threshold ? 'PASS' : 'FAIL';
+}
+
+function getCoverageColor(linePercent) {
+    if (linePercent >= 90) return 'color: var(--emerald); font-weight: 700';
+    if (linePercent >= state.threshold) return 'color: var(--emerald); font-weight: 700';
+    if (linePercent >= 60) return 'color: var(--amber); font-weight: 700';
+    return 'color: var(--red); font-weight: 700';
+}
+
+function getOverallStatus() {
+    return state.overallCoverage >= state.threshold ? 'PASSED' : 'FAILED';
+}
+</mu>
+<mu-template>
+  <div class="space-y-4">
+    <!-- Coverage Header -->
+    <div class="coverage-header">
+      <span>Target Quality Gate: <strong>Line Coverage ≥ ${state.threshold}.0%</strong> | <strong>Branch Coverage ≥ 75.0%</strong></span>
+      <span class="coverage-overall">Overall Coverage: ${state.overallCoverage}% ${getOverallStatus()}</span>
+    </div>
+
+    <!-- Coverage Table -->
+    <div class="card-dark" style="border-radius: var(--radius-md); overflow: hidden; border: 1px solid var(--border)">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>File Name</th>
+            <th>Total Lines</th>
+            <th>Covered</th>
+            <th>Line %</th>
+            <th>Branch %</th>
+            <th>Uncovered Lines</th>
+            <th class="text-right">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr mu-for="file in state.files">
+            <td class="text-bold">${file.name}</td>
+            <td>${file.totalLines}</td>
+            <td>${file.covered}</td>
+            <td style="${getCoverageColor(file.linePercent)}">${file.linePercent}%</td>
+            <td>${file.branchPercent}%</td>
+            <td style="color: var(--text-dim)">${file.uncovered}</td>
+            <td class="text-right"><span class="${getStatusBadge(file.linePercent)}">${getStatusText(file.linePercent)}</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</mu-template>
+<style scoped>
+</style>

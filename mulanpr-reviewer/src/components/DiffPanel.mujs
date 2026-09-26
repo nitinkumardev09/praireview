@@ -1,0 +1,106 @@
+<mu>
+import { muState } from '@mulanjs/mulanjs';
+
+const state = muState({
+    selectedIndex: 0,
+    files: [
+        { name: 'OrderProcessingService.cs', path: 'src/Services/OrderProcessingService.cs', additions: 147, deletions: 28 },
+        { name: 'OrderRepository.cs', path: 'src/Data/OrderRepository.cs', additions: 62, deletions: 14 },
+        { name: 'OrderProcessingTests.cs', path: 'tests/Services/OrderProcessingTests.cs', additions: 110, deletions: 0 }
+    ],
+    diffs: [
+        {
+            hunk: '@@ -40,10 +40,15 @@ public async Task<OrderResult> ProcessOrderAsync(OrderRequest req) {',
+            lines: [
+                { type: 'ctx', text: '    var validation = _validator.Validate(req);' },
+                { type: 'ctx', text: '    if (!validation.IsValid) throw new ArgumentException("Invalid request");' },
+                { type: 'del', text: '-   var client = new HttpClient(); // BUG: Resource leak' },
+                { type: 'add', text: '+   using var client = _clientFactory.CreateClient();' },
+                { type: 'add', text: '+   var payload = JsonSerializer.Serialize(req);' },
+                { type: 'add', text: '+   var response = await client.PostAsync(endpoint, new StringContent(payload));' },
+                { type: 'ctx', text: '    return await ParseResponseAsync(response);' }
+            ]
+        },
+        {
+            hunk: '@@ -85,8 +85,12 @@ public async Task<List<Order>> GetOrdersAsync()',
+            lines: [
+                { type: 'ctx', text: '    try {' },
+                { type: 'del', text: '-       catch (Exception) { }  // BUG: Silent swallow' },
+                { type: 'add', text: '+       catch (DbException ex) {' },
+                { type: 'add', text: '+           _logger.LogError(ex, "Order query failed");' },
+                { type: 'add', text: '+           throw;' },
+                { type: 'add', text: '+       }' },
+                { type: 'ctx', text: '    return orders;' }
+            ]
+        },
+        {
+            hunk: '@@ -1,0 +1,110 @@ New test file',
+            lines: [
+                { type: 'add', text: '+ [Fact]' },
+                { type: 'add', text: '+ public async Task ProcessOrder_ValidPayment_ShouldSucceed() {' },
+                { type: 'add', text: '+     var sut = CreateServiceUnderTest();' },
+                { type: 'add', text: '+     var result = await sut.ProcessOrderAsync(ValidRequest);' },
+                { type: 'add', text: '+     Assert.True(result.Success);' },
+                { type: 'add', text: '+ }' }
+            ]
+        }
+    ]
+});
+
+function setFiles(files) {
+    state.files = files;
+    state.selectedIndex = 0;
+}
+
+function selectFile(idx) {
+    state.selectedIndex = idx;
+}
+
+function getFileBtnClass(idx) {
+    return 'diff-file-btn ' + (state.selectedIndex === idx ? 'active' : '');
+}
+
+function getLineClass(type) {
+    if (type === 'add') return 'diff-add';
+    if (type === 'del') return 'diff-del';
+    return '';
+}
+
+function getCurrentFile() {
+    return state.files[state.selectedIndex] || state.files[0];
+}
+
+function getCurrentDiff() {
+    return state.diffs[state.selectedIndex] || state.diffs[0];
+}
+</mu>
+<mu-template>
+  <div class="diff-layout">
+    <!-- File List Sidebar -->
+    <div class="diff-file-list">
+      <div class="diff-file-list-title">Modified PR Files (${state.files.length})</div>
+      <div class="space-y-2" mu-for="(file, idx) in state.files">
+        <button class="${getFileBtnClass(idx)}" mu-click="selectFile(idx)">
+          <span class="truncate">${file.name}</span>
+          <span class="diff-stat">+${file.additions} -${file.deletions}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Diff Pane -->
+    <div class="diff-pane">
+      <div class="diff-pane-header">
+        <span>${getCurrentFile().path}</span>
+        <span style="font-size:11px; color:var(--text-dim)">Diff Boundaries Monitored</span>
+      </div>
+      <div class="diff-content">
+        <div class="diff-hunk">${getCurrentDiff().hunk}</div>
+        <div mu-for="line in getCurrentDiff().lines">
+          <div class="${getLineClass(line.type)}">${line.text}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</mu-template>
+<style scoped>
+</style>

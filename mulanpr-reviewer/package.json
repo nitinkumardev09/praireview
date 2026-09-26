@@ -1,0 +1,31 @@
+{
+  "name": "mulanpr-reviewer",
+  "version": "2.0.0",
+  "description": "MulanPR AI Pull Request Reviewer & Autonomous CI Gatekeeper — Built with MulanJS",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "mulan dev",
+    "build": "mulan build",
+    "server": "node server/index.js"
+  },
+  "keywords": ["mulanjs", "code-review", "ai", "pr-reviewer"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@mulanjs/mulanjs": "1.0.1-dev.20260830064028",
+    "@mulanui/mulanui": "^0.2.0-dev.3",
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "css-loader": "^6.8.1",
+    "style-loader": "^3.3.3",
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.3.3",
+    "webpack": "^5.105.3",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.6"
+  }
+}

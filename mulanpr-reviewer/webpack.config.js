@@ -16,14 +16,14 @@ module.exports = {
     static: {
       directory: path.join(__dirname, 'public'),
     },
-    port: 1016,
+    port: 1019,
     open: true,
     hot: true,
     historyApiFallback: true,
     proxy: [
       {
         context: ['/api'],
-        target: 'http://localhost:1017',
+        target: 'http://localhost:1018',
         changeOrigin: true,
       }
     ],
@@ -32,7 +32,6 @@ module.exports = {
     rules: [
       { test: /\.tsx?$/, use: 'ts-loader', exclude: /node_modules/ },
       { test: /\.mujs$/, use: '@mulanjs/mulanjs/loader' },
-      { test: /.s[ac]ss$/i, use: ["style-loader", "css-loader", "sass-loader"] },
       { test: /\.css$/i, use: ["style-loader", "css-loader"] },
     ],
   },
