@@ -48,4 +48,20 @@ export class ApiService {
         if (!res.ok) throw new Error(`Server returned status ${res.status}`);
         return res.json();
     }
+
+    static async authGoogle(email: string): Promise<{ success: boolean; user?: any; sessionToken?: string; message?: string }> {
+        const res = await fetch(`${API_BASE}/api/auth/google`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        return res.json();
+    }
+
+    static async getRoster(): Promise<{ roster: Array<{ email: string; name: string; role: string }> }> {
+        const res = await fetch(`${API_BASE}/api/auth/roster`);
+        if (!res.ok) throw new Error(`Server returned status ${res.status}`);
+        return res.json();
+    }
 }
+

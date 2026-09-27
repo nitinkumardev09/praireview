@@ -229,9 +229,41 @@ class DynamicAnalyzer {
     }
 }
 
-/* ==========================================================================
-   4. REST API ROUTES
-   ========================================================================== */
+// Whitelisted roster of authorized engineering accounts
+const AUTHORIZED_ROSTER = [
+    { email: 'nitin@example.com', name: 'Nitin Kumar', role: 'Principal Architect', provider: 'google', avatar: '👨‍💻' },
+    { email: 'admin@praireview.com', name: 'DevOps Admin', role: 'Security & CI Admin', provider: 'google', avatar: '🛡️' },
+    { email: 'developer@mulanpr.local', name: 'Local Dev', role: 'Staff Engineer', provider: 'local', avatar: '⚡' }
+];
+
+const activeSessions = new Map();
+
+// 0. Authentication Endpoints
+app.post('/api/auth/google', (req, res) => {
+    const { email } = req.body;
+    const targetEmail = (email || '').trim().toLowerCase();
+    const matched = AUTHORIZED_ROSTER.find(u => u.email.toLowerCase() === targetEmail);
+
+    if (!matched) {
+        return res.status(403).json({
+            success: false,
+            message: `Access Denied: "${targetEmail}" is not in the authorized engineering roster.`
+        });
+    }
+
+    const sessionToken = Buffer.from(`${matched.email}-${Date.now()}`).toString('base64');
+    activeSessions.set(sessionToken, matched);
+
+    res.json({
+        success: true,
+        user: matched,
+        sessionToken
+    });
+});
+
+app.get('/api/auth/roster', (req, res) => {
+    res.json({ roster: AUTHORIZED_ROSTER.map(u => ({ email: u.email, name: u.name, role: u.role })) });
+});
 
 // 1. Settings Endpoints
 app.get('/api/settings', (req, res) => res.json(runtimeConfig));

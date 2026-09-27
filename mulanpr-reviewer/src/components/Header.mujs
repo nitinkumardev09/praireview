@@ -25,9 +25,20 @@ function applyTheme(theme) {
 const currentTheme = getInitialTheme();
 applyTheme(currentTheme);
 
+function getStoredUser() {
+    if (typeof localStorage === 'undefined') return null;
+    try {
+        const raw = localStorage.getItem('mulanpr_auth_user');
+        return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+        return null;
+    }
+}
+
 const headerState = muState({
     currentRoute: (typeof window !== 'undefined' && window.location.hash) || '#/',
-    theme: currentTheme
+    theme: currentTheme,
+    user: getStoredUser()
 });
 
 if (typeof window !== 'undefined') {
@@ -40,6 +51,10 @@ if (typeof window !== 'undefined') {
             headerState.theme = e.detail.theme;
             applyTheme(e.detail.theme);
         }
+    });
+
+    window.addEventListener('mulan-auth-change', (e) => {
+        headerState.user = (e.detail && e.detail.user) || null;
     });
 }
 
@@ -64,16 +79,30 @@ function getThemeTitle() {
 }
 
 function getNavClass(path) {
-    const cur = headerState.currentRoute || '#/';
-    const isActive = path === '#/' ? (cur === '#/' || cur === '' || cur === '#') : cur.startsWith(path);
-    return 'nav-tab ' + (isActive ? 'active' : '');
+    const cur = headerState.currentRoute || '#/login';
+    if (path === '#/' || path === '#/cockpit') {
+        const isCockpit = (cur === '#/' || cur === '' || cur === '#' || cur.startsWith('#/cockpit')) && !!headerState.user;
+        return 'nav-tab ' + (isCockpit ? 'active' : '');
+    }
+    return 'nav-tab ' + (cur.startsWith(path) ? 'active' : '');
+}
+
+function signOut() {
+    try {
+        localStorage.removeItem('mulanpr_auth_user');
+    } catch (e) {}
+    headerState.user = null;
+    if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('mulan-auth-change', { detail: { user: null } }));
+        window.location.hash = '#/login';
+    }
 }
 </mu>
 <mu-template>
   <header class="studio-header">
     <div class="header-left">
       <!-- Brand Floral SVG Logo -->
-      <a href="#/" class="logo-mark" aria-label="MulanPR Studio">
+      <a href="#/cockpit" class="logo-mark" aria-label="MulanPR Studio">
         <svg class="brand-svg" width="34" height="34" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
           <circle cx="60" cy="60" r="40" fill="#FF4081" opacity="0.07"></circle>
           <g>
@@ -109,13 +138,21 @@ function getNavClass(path) {
 
       <!-- Nav Tabs -->
       <nav class="nav-tabs">
-        <a href="#/" class="${getNavClass('#/')}">⚡ Cockpit</a>
+        <a href="#/cockpit" class="${getNavClass('#/cockpit')}">⚡ Cockpit</a>
         <a href="#/settings" class="${getNavClass('#/settings')}">⚙️ Settings</a>
         <a href="#/about" class="${getNavClass('#/about')}">ℹ️ About</a>
+        <a href="#/login" class="${getNavClass('#/login')}">🔑 Login</a>
       </nav>
     </div>
 
     <div class="header-right">
+      <!-- User profile badge when logged in -->
+      <div mu-if="headerState.user" class="header-user-badge">
+        <span class="header-user-avatar">${headerState.user ? headerState.user.avatar : '👨‍💻'}</span>
+        <span class="header-user-email">${headerState.user ? headerState.user.email : ''}</span>
+        <button class="header-signout-btn" mu-click="signOut()" title="Sign Out">✕</button>
+      </div>
+
       <!-- Theme Switcher Toggle -->
       <button class="theme-toggle" mu-click="toggleTheme()" title="${getThemeTitle()}" id="theme-toggle-btn">
         ${getThemeLabel()}
