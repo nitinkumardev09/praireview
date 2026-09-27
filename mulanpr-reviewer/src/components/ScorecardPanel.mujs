@@ -1,0 +1,157 @@
+<mu>
+import { muState } from '@mulanjs/mulanjs';
+
+const state = muState({
+    report: null
+});
+
+function setReport(data) {
+    state.report = data;
+}
+
+function getVerdictClass() {
+    if (!state.report) return 'verdict-banner verdict-approve';
+    const v = state.report.verdict || 'APPROVE';
+    if (v === 'APPROVE') return 'verdict-banner verdict-approve';
+    if (v === 'REQUEST_CHANGES') return 'verdict-banner verdict-reject';
+    return 'verdict-banner verdict-comment';
+}
+
+function getVerdictEmoji() {
+    if (!state.report) return '🏆';
+    const v = state.report.verdict || 'APPROVE';
+    if (v === 'APPROVE') return '🏆';
+    if (v === 'REQUEST_CHANGES') return '⚠️';
+    return '💬';
+}
+
+function getVerdictTitle() {
+    if (!state.report) return 'QUALITY GATE: MERGE APPROVED';
+    const v = state.report.verdict || 'APPROVE';
+    if (v === 'APPROVE') return 'QUALITY GATE: MERGE APPROVED';
+    if (v === 'REQUEST_CHANGES') return 'QUALITY GATE: MERGE BLOCKED';
+    return 'REVIEW COMMENTS PROVIDED';
+}
+
+function getVerdictSubtitle() {
+    if (!state.report) return 'Line coverage is 92.4% (Threshold ≥ 80%), zero memory leaks detected, and all tests passed.';
+    return state.report.summary || '';
+}
+
+function getMetricColor(val, threshold) {
+    if (val >= threshold) return 'metric-value text-green';
+    if (val >= threshold * 0.75) return 'metric-value text-amber';
+    return 'metric-value text-red';
+}
+
+function getFillClass(val, threshold) {
+    if (val >= threshold) return 'progress-fill fill-green';
+    if (val >= threshold * 0.75) return 'progress-fill fill-amber';
+    return 'progress-fill fill-red';
+}
+
+function getSeverityBadge(sev) {
+    return 'badge badge-' + String(sev).toLowerCase();
+}
+
+function getQuality() {
+    return state.report ? state.report.qualityScore : 92;
+}
+
+function getSecurity() {
+    return state.report ? state.report.securityScore : 95;
+}
+
+function getCoverage() {
+    return state.report ? state.report.coveragePercent : '92.4';
+}
+
+function getMemoryDelta() {
+    return state.report ? state.report.memoryDelta : '+2.4';
+}
+
+function getIssues() {
+    return state.report ? (state.report.issues || []) : [
+        { severity: 'CRITICAL', file: 'src/Services/OrderProcessingService.cs:45', rule: 'Rule 2.1: Resource Management', comment: 'HttpClient instance is instantiated without using declaration or IDisposable cleanup. This retains unclosed socket handles and causes socket exhaustion under high concurrent load.', fix: '// Suggested Fix:\nusing var client = _httpClientFactory.CreateClient("PaymentService");\nvar response = await client.PostAsync(endpoint, content, cancellationToken);' },
+        { severity: 'MEDIUM', file: 'src/Data/OrderRepository.cs:91', rule: 'Rule 1.2: Error Handling', comment: 'Generic catch block catches Exception without logging stack trace context or rethrowing. Silent swallow of database exceptions hides deadlock scenarios.', fix: '' }
+    ];
+}
+
+function getIssueCount() {
+    return getIssues().length + ' issues found';
+}
+
+function copyFix(code) {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        navigator.clipboard.writeText(code);
+    }
+}
+</mu>
+<mu-template>
+  <div class="space-y-5">
+    <!-- Quality Gate Banner -->
+    <div class="${getVerdictClass()}">
+      <div class="verdict-left">
+        <span class="verdict-icon">${getVerdictEmoji()}</span>
+        <div>
+          <div class="verdict-title">${getVerdictTitle()}</div>
+          <div class="verdict-subtitle">${getVerdictSubtitle()}</div>
+        </div>
+      </div>
+      <div>
+        <span class="badge badge-pass">CHECKS PASSED</span>
+      </div>
+    </div>
+
+    <!-- 4 Key Metric Cards -->
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">Quality Score</div>
+        <div class="${getMetricColor(getQuality(), 80)}">${getQuality()} / 100</div>
+        <div class="metric-sub">Based on active .md rules</div>
+        <div class="progress-bg"><div class="${getFillClass(getQuality(), 80)}" style="width: ${getQuality()}%"></div></div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Security Health</div>
+        <div class="${getMetricColor(getSecurity(), 80)}">${getSecurity()} / 100</div>
+        <div class="metric-sub">Zero injection or secret leaks</div>
+        <div class="progress-bg"><div class="${getFillClass(getSecurity(), 80)}" style="width: ${getSecurity()}%"></div></div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">AST Line Coverage</div>
+        <div class="metric-value text-green">${getCoverage()}%</div>
+        <div class="metric-sub">Target threshold ≥ 80.0%</div>
+        <div class="progress-bg"><div class="progress-fill fill-green" style="width: ${getCoverage()}%"></div></div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Memory Heap Delta</div>
+        <div class="metric-value text-green">${getMemoryDelta()} MB</div>
+        <div class="metric-sub">Safe threshold &lt; 10.0 MB</div>
+      </div>
+    </div>
+
+    <!-- Issues List -->
+    <div class="space-y-3">
+      <div class="flex items-center justify-between">
+        <span class="section-title">Identified Issues & Rule Violations</span>
+        <span class="text-xs" style="color: var(--text-muted)">${getIssueCount()}</span>
+      </div>
+
+      <div class="space-y-3" mu-for="issue in getIssues()">
+        <div class="issue-card">
+          <div class="issue-header">
+            <div class="issue-header-left">
+              <span class="${getSeverityBadge(issue.severity)}">${issue.severity}</span>
+              <span class="issue-file">${issue.file}</span>
+            </div>
+            <span class="issue-rule">[${issue.rule}]</span>
+          </div>
+          <p class="issue-body">${issue.comment}</p>
+          <pre class="issue-fix" mu-if="issue.fix">${issue.fix}</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</mu-template>
+<style scoped>
+</style>

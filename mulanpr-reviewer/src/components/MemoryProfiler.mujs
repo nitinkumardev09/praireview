@@ -1,0 +1,75 @@
+<mu>
+import { muState } from '@mulanjs/mulanjs';
+
+const state = muState({
+    preHeap: '48.2',
+    preRSS: '84.1',
+    postHeap: '50.6',
+    postRSS: '88.2',
+    heapDelta: '+2.4',
+    leakStatus: 'SAFE',
+    handles: [
+        { text: '18 Database Connection Pools Cleanly Disposed', ok: true },
+        { text: 'All Socket Streams and HTTP Client Handles Released', ok: true },
+        { text: 'No Retained Event Listeners or Unhandled Task Promises', ok: true }
+    ]
+});
+
+function setData(data) {
+    if (data.preHeap) state.preHeap = data.preHeap;
+    if (data.preRSS) state.preRSS = data.preRSS;
+    if (data.postHeap) state.postHeap = data.postHeap;
+    if (data.postRSS) state.postRSS = data.postRSS;
+    if (data.heapDelta) state.heapDelta = data.heapDelta;
+    if (data.leakStatus) state.leakStatus = data.leakStatus;
+    if (data.handles) state.handles = data.handles;
+}
+
+function getDeltaClass() {
+    return state.leakStatus === 'SAFE' ? 'memory-value safe' : 'memory-value';
+}
+
+function getStatusEmoji() {
+    return state.leakStatus === 'SAFE' ? '✅' : '⚠️';
+}
+
+function getStatusText() {
+    return state.leakStatus === 'SAFE' ? 'Zero Memory Leaks' : 'Potential Leak Detected';
+}
+</mu>
+<mu-template>
+  <div class="space-y-5">
+    <!-- 3 Memory Cards -->
+    <div class="memory-grid">
+      <div class="memory-card">
+        <div class="metric-label">Pre-Suite Heap Memory</div>
+        <div class="memory-value">${state.preHeap} MB</div>
+        <div class="metric-sub">Baseline RSS: ${state.preRSS} MB</div>
+      </div>
+      <div class="memory-card">
+        <div class="metric-label">Post-Suite Heap Memory</div>
+        <div class="memory-value">${state.postHeap} MB</div>
+        <div class="metric-sub">Peak RSS: ${state.postRSS} MB</div>
+      </div>
+      <div class="memory-card">
+        <div class="metric-label">Heap Delta & Status</div>
+        <div class="${getDeltaClass()}">${state.heapDelta} MB (${state.leakStatus})</div>
+        <div class="metric-sub" style="color: var(--emerald); font-weight: 600">${getStatusEmoji()} ${getStatusText()}</div>
+      </div>
+    </div>
+
+    <!-- Resource Handles Verification -->
+    <div class="card card-dark space-y-2">
+      <h4 class="section-title" style="font-size: 12px">Resource Handles Verification</h4>
+      <ul class="handles-list">
+        <li mu-for="handle in state.handles">
+          <span class="check" mu-if="handle.ok">✓</span>
+          <span mu-if="!handle.ok">✗</span>
+          <span>${handle.text}</span>
+        </li>
+      </ul>
+    </div>
+  </div>
+</mu-template>
+<style scoped>
+</style>
